@@ -7,7 +7,18 @@ curr_dir = os.path.dirname(os.path.realpath(__file__))
 with open(os.path.join(curr_dir, 'creds.json')) as f:
     creds = json.loads(f.read())
 
+# not ideal but this is the postgres connection to retrieve data for both
+# debug and production flows
+_SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
+    creds['production']['db']['username'],
+    creds['production']['db']['password'],
+    creds['production']['db']['host'],
+    creds['production']['db']['port'],
+    'ef'
+)
+
 class Config(object):
+    # test on a local sqllite database
     SECRET_KEY = b'\x05\xd9.(g\xe1\xbf`\xb1t\xb0n\xeb\xed\x98\xa1'
     SQLALCHEMY_DATABASE_URI = creds['debug']['db']['uri']
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -26,14 +37,8 @@ class Config(object):
 class ProductionConfig(Config):
     DEBUG = False
 
-    # PostgreSQL database
-    SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(
-        creds['production']['db']['username'],
-        creds['production']['db']['password'],
-        creds['production']['db']['host'],
-        creds['production']['db']['port'],
-        creds['production']['db']['database']
-    )
+    # use the above postgres database
+    SQLALCHEMY_DATABASE_URI = _SQLALCHEMY_DATABASE_URI
 
 
 class DebugConfig(Config):

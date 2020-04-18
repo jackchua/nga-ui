@@ -6,7 +6,7 @@ Created on Sun Jul  8 10:39:33 2018
 """
 from dash import Dash
 from dash.dependencies import Input, State, Output
-from .utility import apply_layout_with_auth, load_object, save_object
+from .utility import apply_layout_with_auth, load_object, save_object, get_postgres_sqlalchemy_uri
 import dash_core_components as dcc
 import dash_html_components as html
 from sqlalchemy.sql import text
@@ -21,10 +21,9 @@ layout = html.Div([
     dcc.Graph(id='my-graph')
 ], style={'width': '500'})
 
-pgdb = create_engine('postgresql+psycopg2://jack:rxmbfh87@192.168.1.15:5432/ef')
-
 def Add_Dash(server):
     app = Dash(server=server, url_base_pathname=_URL_BASE)
+    pgdb = create_engine(get_postgres_sqlalchemy_uri(app=app))
     apply_layout_with_auth(app, layout)
 
     @app.callback(Output('my-graph', 'figure'), [Input(component_id='my-id', component_property='value')])

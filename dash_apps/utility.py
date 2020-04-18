@@ -12,6 +12,9 @@ import pandas as pd
 import uuid
 import os
 import pickle
+import json
+
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def save_object(obj, session_id, name):
     os.makedirs('Dir_Store', exist_ok=True)
@@ -43,3 +46,6 @@ def apply_layout_with_auth(app, layout):
     
     app.config.suppress_callback_exceptions = True
     app.layout = serve_layout
+
+def get_postgres_sqlalchemy_uri(app):
+    return app.config._SQLALCHEMY_DATABASE_URI
