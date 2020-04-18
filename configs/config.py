@@ -1,12 +1,17 @@
 import os
+import json
+
+# require that a creds.json file has been created / downloaded from a secure
+# key store upon deployment
+creds = json.loads('creds.json')
 
 class Config(object):
-    SECRET_KEY = 'key'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
+    SECRET_KEY = b'\x05\xd9.(g\xe1\xbf`\xb1t\xb0n\xeb\xed\x98\xa1'
+    SQLALCHEMY_DATABASE_URI = creds['debug']['db']['uri']
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    ADMIN = {'username': 'admin',
-             'email': 'admin',
-             'password': 'admin'}
+    ADMIN = {'username': creds['debug']['db']['username'],
+             'email': creds['debug']['db']['email'],
+             'password': creds['debug']['db']['password']}
 
     # THEME SUPPORT
     #  if set then url_for('static', filename='', theme='')
@@ -21,11 +26,11 @@ class ProductionConfig(Config):
 
     # PostgreSQL database
     SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(
-        os.environ.get('GENTELELLA_DATABASE_USER', 'gentelella'),
-        os.environ.get('GENTELELLA_DATABASE_PASSWORD', 'gentelella'),
-        os.environ.get('GENTELELLA_DATABASE_HOST', 'db'),
-        os.environ.get('GENTELELLA_DATABASE_PORT', 5432),
-        os.environ.get('GENTELELLA_DATABASE_NAME', 'gentelella')
+        creds['production']['db']['user'],
+        creds['production']['db']['password'],
+        creds['production']['db']['host'],
+        creds['production']['db']['port'],
+        creds['production']['db']['database']
     )
 
 

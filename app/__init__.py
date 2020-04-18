@@ -3,7 +3,7 @@ from flask_login import current_user
 from .extensions import db, login_manager
 from importlib import import_module
 from .base.models import User
-from Dashboard import Dash_App1, Dash_App2
+from dash_apps import google_ad_budget_optimizer, Dash_App2
 from os import path
 import logging
 
@@ -82,6 +82,6 @@ def create_app(config, selenium=False):
     configure_database(app)
     configure_logs(app)
     apply_themes(app)
-    app = Dash_App1.Add_Dash(app)
+    app = google_ad_budget_optimizer.Add_Dash(app)
     app = Dash_App2.Add_Dash(app)
     return app
