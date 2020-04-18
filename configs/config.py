@@ -1,7 +1,9 @@
+import os
 import json
 
 # require that a creds.json file has been created / downloaded from a secure
 # key store upon deployment
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 with open('creds.json') as f:
     creds = json.loads(f.read())
 
