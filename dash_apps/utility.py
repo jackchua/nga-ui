@@ -47,5 +47,15 @@ def apply_layout_with_auth(app, layout):
     app.config.suppress_callback_exceptions = True
     app.layout = serve_layout
 
-def get_postgres_sqlalchemy_uri(app):
-    return app.config._SQLALCHEMY_DATABASE_URI
+# utility functoin to get postgres DB access without having access to the app object
+def get_postgres_sqlalchemy_uri():
+    with open(os.path.join(curr_dir, '../config/creds.json')) as f:
+        creds = json.loads(f.read())
+
+    return 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
+        creds['production']['db']['username'],
+        creds['production']['db']['password'],
+        creds['production']['db']['host'],
+        creds['production']['db']['port'],
+        'ef'
+    )
