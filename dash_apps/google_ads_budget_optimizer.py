@@ -13,7 +13,7 @@ from sqlalchemy.sql import text
 from sqlalchemy import create_engine
 import pandas as pd
 
-_URL_BASE = '/dash/google_ad_budget_optimizer/'
+_URL_BASE = '/dash/google_ads_budget_optimizer/'
 _ACCOUNT_VALUES = ('test')
 
 layout = html.Div([
