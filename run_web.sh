@@ -1,1 +1,1 @@
-gunicorn run:app --config=./configs/gunicorn.py &
+gunicorn run:app --config=./configs/gunicorn.py --reload
