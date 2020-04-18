@@ -11,12 +11,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 from sqlalchemy.sql import text
 from sqlalchemy import create_engine
-from app.extensions import db
 import pandas as pd
-# from pandas_datareader import data as web
-from datetime import datetime as dt
 
-_URL_BASE = '/dash/app1/'
+_URL_BASE = '/dash/google_ad_budget_optimizer/'
 _ACCOUNT_VALUES = ('test')
 
 layout = html.Div([
