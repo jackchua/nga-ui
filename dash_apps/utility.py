@@ -49,7 +49,7 @@ def apply_layout_with_auth(app, layout):
 
 # utility functoin to get postgres DB access without having access to the app object
 def get_postgres_sqlalchemy_uri():
-    with open(os.path.join(curr_dir, '../config/creds.json')) as f:
+    with open(os.path.join(curr_dir, '../configs/creds.json')) as f:
         creds = json.loads(f.read())
 
     return 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(

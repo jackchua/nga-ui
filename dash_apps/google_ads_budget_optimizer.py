@@ -23,7 +23,7 @@ layout = html.Div([
 
 def Add_Dash(server):
     app = Dash(server=server, url_base_pathname=_URL_BASE)
-    pgdb = create_engine(get_postgres_sqlalchemy_uri(app=app))
+    pgdb = create_engine(get_postgres_sqlalchemy_uri())
     apply_layout_with_auth(app, layout)
 
     @app.callback(Output('my-graph', 'figure'), [Input(component_id='my-id', component_property='value')])
