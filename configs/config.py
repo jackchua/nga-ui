@@ -1,9 +1,9 @@
-import os
 import json
 
 # require that a creds.json file has been created / downloaded from a secure
 # key store upon deployment
-creds = json.loads('creds.json')
+with open('creds.json') as f:
+    creds = json.loads(f.read())
 
 class Config(object):
     SECRET_KEY = b'\x05\xd9.(g\xe1\xbf`\xb1t\xb0n\xeb\xed\x98\xa1'
