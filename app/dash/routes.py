@@ -5,5 +5,8 @@ from dash_apps import google_ads_budget_optimizer
 
 @blueprint.route('/google_ads_budget_optimizer')
 @login_required
-def app1_template():
-    return render_template('google_ads_budget_optimizer.html', dash_url = google_ads_budget_optimizer._URL_BASE)
+def google_ads_budget_optimizer_template():
+    return render_template(
+        'google_ads_budget_optimizer.html',
+        dash_url = google_ads_budget_optimizer._URL_BASE
+    )

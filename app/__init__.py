@@ -13,7 +13,8 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
-    for module_name in ('base', 'home', 'dash', 'setting'):
+    for module_name in ('base', 'home', 'DashMaster', 'setting'):
+        print("Registered blueprint {}".format(module_name))
         module = import_module('app.{}.routes'.format(module_name))
         app.register_blueprint(module.blueprint)
 
