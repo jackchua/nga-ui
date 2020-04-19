@@ -4,7 +4,8 @@ Created on Sun Jul  8 10:39:33 2018
 
 @author: jimmybow
 """
-import plotly_express as px
+import plotly.express as px
+from datetime import datetime
 from dash import Dash
 from dash.dependencies import Input, State, Output
 import dash_core_components as dcc
@@ -36,12 +37,14 @@ layout = html.Div([
         id='campaign-budget-table',
         columns=(
             [{'id': 'c_id', 'name': 'Campaign ID'},
-             {'id': 'old_value', 'name': 'Last Known Budget'},
-             {'id': 'new_value', 'name': 'Proposed Budget'},
-             {'id': 'created_at', 'name': 'Create Time'}]
+             {'id': 'old_value', 'name': 'Last Known Daily Budget ($)'},
+             {'id': 'new_value', 'name': 'Proposed Daily Budget ($)'},
+             {'id': 'readable_time', 'name': 'Create Time'}]
         ),
         editable=True
     ),
+    html.H2('Simulated impact of optimization change'),
+    html.H4('TBD'),
     html.H2('Budget changes over time per campaign'),
     dcc.Graph(id='budget-over-time-graph'),
     html.Div(id='intermediate-value', style={'display': 'none'})
@@ -67,6 +70,7 @@ def Add_Dash(server):
         df.c_id = df.c_id.astype(str)
         df.old_value = df.old_value / 1000000000.
         df.new_value = df.new_value / 1000000000.
+        df['readable_time'] = df['created_at'].dt.strftime('%Y-%m-%d | %H:%M:%S').replace('T',' ')
         return df.to_json(date_format='iso', orient='split')
 
 
@@ -79,7 +83,7 @@ def Add_Dash(server):
         df = df[df.submitted==False]
         idx = df.groupby(['c_id'])['created_at'].transform(max) == df['created_at']
         df = df[idx]
-        columns = ['c_id', 'old_value', 'new_value', 'created_at']
+        columns = ['c_id', 'old_value', 'new_value', 'readable_time']
         return df[columns].to_dict(orient='records')
 
     @app.callback(Output('budget-over-time-graph', 'figure'),
@@ -87,14 +91,17 @@ def Add_Dash(server):
     def update_budget_over_time_graph(json_data):
         df = pd.read_json(json_data, orient='split')
         df = df[df.submitted==True]
+        df['c_id'] = df['c_id'].astype(str)
 
         # return the graph
-        return px.line(
+        return px.scatter(
             df,
             x='created_at',
             y='new_value',
             color='c_id',
             width=1000
-        )
+        )\
+            .update_traces(mode='lines+markers')\
+            .update_layout(legend_title='<b> Campaign ID </b>')
 
     return app.server
