@@ -4,58 +4,97 @@ Created on Sun Jul  8 10:39:33 2018
 
 @author: jimmybow
 """
+import plotly_express as px
 from dash import Dash
 from dash.dependencies import Input, State, Output
-from .utility import apply_layout_with_auth, load_object, save_object, get_postgres_sqlalchemy_uri
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 from sqlalchemy.sql import text
 from sqlalchemy import create_engine
 import pandas as pd
 
+from .utility import apply_layout_with_auth, load_object, save_object, get_postgres_sqlalchemy_uri
+
+# global vars
 _URL_BASE = '/dash/google_ads_budget_optimizer/'
 _ACCOUNT_VALUES = ('test')
 
+# layout
 layout = html.Div([
-    dcc.Input(id='my-id', value='Account to optimize (i.e. test)', type='text'),
-    dcc.Graph(id='my-graph')
+    html.H2('Select account to optimize budget for'),
+    dcc.Dropdown(
+        id='account-dropdown',
+        options=[
+            {'label': 'Test', 'value':'test'},
+            {'label': 'Hult', 'value':'hult'}
+        ],
+        value='test'
+    ),
+    html.H2('Review proposed optimization changes'),
+    dash_table.DataTable(
+        id='campaign-budget-table',
+        columns=(
+            [{'id': 'c_id', 'name': 'Campaign ID'},
+             {'id': 'old_value', 'name': 'Last Known Budget'},
+             {'id': 'new_value', 'name': 'Proposed Budget'},
+             {'id': 'created_at', 'name': 'Create Time'}]
+        ),
+        editable=True
+    ),
+    html.H2('Budget changes over time per campaign'),
+    dcc.Graph(id='budget-over-time-graph'),
+    html.Div(id='intermediate-value', style={'display': 'none'})
 ], style={'width': '500'})
 
+# main initialization and callbacks
 def Add_Dash(server):
     app = Dash(server=server, url_base_pathname=_URL_BASE)
     pgdb = create_engine(get_postgres_sqlalchemy_uri())
     apply_layout_with_auth(app, layout)
 
-    @app.callback(Output('my-graph', 'figure'), [Input(component_id='my-id', component_property='value')])
-    def update_graph(input_value):
-        if input_value in _ACCOUNT_VALUES:
-            statement = text("""
-            select * from {}.google_ads_budget_bid_staging where submitted=true
-            """.format(input_value))
-            with pgdb.connect() as con:
-                rs = con.execute(statement)
-            data = rs.fetchall()
-            keys = rs.keys()
-            df = pd.DataFrame(data, columns=keys)
-            df.c_id = df.c_id.astype(str)
+    @app.callback(Output('intermediate-value', 'children'),
+                         [Input('account-dropdown', 'value')])
+    def get_campaign_budget_data(value):
+        statement = text("""
+        select * from {}.google_ads_budget_bid_staging where bid_unit='campaign' and bid_type='budget';
+        """.format(value))
+        with pgdb.connect() as con:
+            rs = con.execute(statement)
+        data = rs.fetchall()
+        keys = rs.keys()
+        df = pd.DataFrame(data, columns=keys)
+        df.c_id = df.c_id.astype(str)
+        df.old_value = df.old_value / 1000000000.
+        df.new_value = df.new_value / 1000000000.
+        return df.to_json(date_format='iso', orient='split')
 
-            # df = pd.DataFrame([(1,1),(2,2),(3,3),(4,4)], columns=['x','y'])
 
-            print(df)
+    @app.callback(Output('campaign-budget-table', 'data'),
+                  [Input('intermediate-value', 'children')])
+    def update_campaign_budget_table(json_data):
+        df = pd.read_json(json_data, orient='split')
 
-            return {
-                'data': [{
-                    'x': df.created_at,
-                    'y': df.new_value,
-                    'color': df.c_id,
-                    'type': 'line'
-                }],
-                'layout': {'margin': {'l': 40, 'r':0, 't':20, 'b':30}}
-            }
+        # get the latest unsubmitted rows for each campaign
+        df = df[df.submitted==False]
+        idx = df.groupby(['c_id'])['created_at'].transform(max) == df['created_at']
+        df = df[idx]
+        columns = ['c_id', 'old_value', 'new_value', 'created_at']
+        return df[columns].to_dict(orient='records')
 
-        else:
-            # not a valid account
-            pass
+    @app.callback(Output('budget-over-time-graph', 'figure'),
+                  [Input('intermediate-value', 'children')])
+    def update_budget_over_time_graph(json_data):
+        df = pd.read_json(json_data, orient='split')
+        df = df[df.submitted==True]
 
+        # return the graph
+        return px.line(
+            df,
+            x='created_at',
+            y='new_value',
+            color='c_id',
+            width=1000
+        )
 
     return app.server
