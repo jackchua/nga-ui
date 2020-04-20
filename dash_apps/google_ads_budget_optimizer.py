@@ -32,7 +32,7 @@ layout = html.Div([
         ],
         value='test'
     ),
-    html.H2('Review proposed optimization changes'),
+    html.H2('Review and submit proposed optimization changes'),
     dash_table.DataTable(
         id='campaign-budget-table',
         columns=(
@@ -43,6 +43,7 @@ layout = html.Div([
         ),
         editable=True
     ),
+    html.Button('Submit', id='submit-optimization-change', type='submit'),
     html.H2('Simulated impact of optimization change'),
     html.H4('TBD'),
     html.H2('Budget changes over time per campaign'),

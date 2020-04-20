@@ -18,14 +18,28 @@
   <!-- sidebar menu -->
   <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
     <div class="menu_section">
-      <h3>General</h3>
       <ul class="nav side-menu">
 
         <li><a href="/home"><i class="fa fa-home"></i> Home <span></span></a></li>
 
-        <li><a><i class="fa fa-suitcase"></i> Tools <span class="fa fa-chevron-down"></span></a>
+        <li><a><i class="fa fa-google"></i> Google Ads Tools <span class="fa fa-chevron-down"></span></a>
           <ul class="nav child_menu">
             <li><a href="/DashMaster/google_ads_budget_optimizer">Google Ads Budget Optimizer</a></li>
+            <li><a href="#">Google Ads Negative Keyword Optimizer</a></li>
+            <li><a href="#">Google Ads LTV Target Optimizer</a></li>
+          </ul>
+        </li>
+
+        <li><a><i class="fa fa-picture-o"></i> Display Marketing <span class="fa fa-chevron-down"></span></a>
+          <ul class="nav child_menu">
+            <li><a href="#">Creative Optimizer</a></li>
+          </ul>
+        </li>
+
+        <li><a><i class="fa fa-line-chart"></i> Centralized Reporting <span class="fa fa-chevron-down"></span></a>
+          <ul class="nav child_menu">
+            <li><a href="#">Consolidated Performance</a></li>
+            <li><a href="#">Brand Impact Analysis</a></li>
           </ul>
         </li>
         
@@ -45,27 +59,4 @@
     </div>
   </div>
   <!-- /sidebar menu -->
-
-  <!-- /menu footer buttons -->
-  <div class="sidebar-footer hidden-small">
-    {% if Is_admin %}
-    <a data-toggle="tooltip" data-placement="top" title="Admin Settings" href="/setting/add_user">
-      <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
-    </a>
-    {% else %}
-    <a data-toggle="tooltip" data-placement="top" title="Settings" href="/setting/change_password">
-        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
-    </a>
-    {% endif %}
-    <a data-toggle="tooltip" data-placement="top" title="FullScreen">
-      <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
-    </a>
-    <a data-toggle="tooltip" data-placement="top" title="Lock">
-      <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
-    </a>
-    <a data-toggle="tooltip" data-placement="top" title="Logout" href="/logout">
-      <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
-    </a>
-  </div>
-  <!-- /menu footer buttons -->
 </div>
