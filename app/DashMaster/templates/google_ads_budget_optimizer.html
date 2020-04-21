@@ -16,10 +16,10 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="dashboard_graph">
           <h1>Google Ads Budget Optimizer Tool</h1>
-          <div style="width: 100%; min-height:800px;" >
-            <iframe
-              frameborder="0" scrolling="yes" onload="resizeIframe(this)"
-              style='position: absolute; background: transparent; width: 95%; height:80vh;'
+          <div id="iframe-container" style="width: 100%; min-height:800px; height:1000px;" >
+            <iframe id="dash-iframe"
+              frameborder="0" scrolling="yes"
+              style='position: absolute; background: transparent; width: 95%; height:1000px;'
               src={{ dash_url }}
               frameborder="0">
             </iframe>

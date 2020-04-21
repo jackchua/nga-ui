@@ -88,11 +88,6 @@
         <script src="{{ url_for('static', filename='vendors/autosize/dist/autosize.min.js') }}"></script>
         <!-- starrr -->
         <script src="{{ url_for('static', filename='vendors/starrr/dist/starrr.js') }}"></script>
-        <script>
-          function resizeIframe(obj) {
-            obj.style.height = (obj.contentWindow.document.documentElement.scrollHeight - 150) + 'px';
-          }
-        </script>
       {% endblock %}
       <!-- Custom Theme Scripts -->
       <script src="{{ url_for('static', filename='build/js/custom.js') }}"></script>
