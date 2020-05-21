@@ -3,7 +3,7 @@ from flask_login import current_user
 from .extensions import db, login_manager
 from importlib import import_module
 from .base.models import User
-from dash_apps import google_ads_budget_optimizer
+from dash_apps import google_ads_budget_optimizer, google_ads_ltv_optimizer
 from os import path
 import logging
 
@@ -84,4 +84,5 @@ def create_app(config, selenium=False):
     configure_logs(app)
     apply_themes(app)
     app = google_ads_budget_optimizer.Add_Dash(app)
+    app = google_ads_ltv_optimizer.Add_Dash(app)
     return app

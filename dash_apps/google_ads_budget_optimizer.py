@@ -55,7 +55,7 @@ layout = html.Div([
         ),
         editable=True
     ),
-    html.Button('Submit', id='submit-optimization-change', type='submit'),
+    html.Button('Submit to Google', id='submit-optimization-change', type='submit'),
     html.H2('Simulated impact of optimization change'),
     dcc.Graph(id='opt-simulation-graph'),
     html.H2('Budget changes over time per campaign'),
@@ -94,7 +94,7 @@ def Add_Dash(server):
         budgets = [int(b) for b in budgets]
         max_budget = np.max(budgets)
         min_budget = np.min(budgets)
-        marks = {i:{'label': '${}'.format(i), 'style': {'fontSize': 14,'writing-mode': 'vertical-rl','text-orientation': 'upright'}} for idx, i in enumerate(budgets) if idx%2==0}
+        marks = {i:{'label': '${}'.format(i), 'style': {'fontSize': 14,'writing-mode': 'vertical-rl','text-orientation': 'upright'}} for idx, i in enumerate(budgets)}
         return [max_budget, None, 0.0, marks, min_budget]
 
     @app.callback(Output('slider-output-container', 'children'),
@@ -135,7 +135,7 @@ def Add_Dash(server):
             x='total_budget',
             y='total_clicks',
             color='proposal',
-            width=1000
+            width=800
         )
 
         # now take any potential manual input and plot as red
@@ -148,7 +148,7 @@ def Add_Dash(server):
             x='total_budget',
             y='total_clicks',
             color='proposal',
-            width=1000
+            width=800
         ).update_traces(
             mode='markers',
             marker_symbol='diamond',

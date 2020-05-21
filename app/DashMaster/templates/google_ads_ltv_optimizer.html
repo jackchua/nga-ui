@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Google Ads Budget Optimizer {% endblock title %}
+{% block title %} Google Ads LTV Optimizer {% endblock title %}
 
 {% block stylesheets %}
   {{ super() }}
@@ -15,11 +15,11 @@
     <div class="row">
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="dashboard_graph">
-          <h1>Google Ads Budget Optimizer Tool</h1>
+          <h1>Google Ads LTV Optimizer Tool</h1>
           <div id="iframe-container" style="width: 100%; min-height:80vh; height:90vh;" >
             <iframe id="dash-iframe"
               frameborder="0" scrolling="yes"
-              style='position: absolute; background: transparent; width: 95%;  height:80vh;'
+              style='position: absolute; background: transparent; width: 95%; height:80vh;'
               src={{ dash_url }}
               frameborder="0">
             </iframe>
