@@ -116,8 +116,10 @@ def Add_Dash(server):
             df,
             x='model_date',
             y='value',
-            color='metric'
+            color='metric',
         )
+        for d in fig.data:
+            d.update(mode='markers+lines')
         return fig
 
     @app.callback(
