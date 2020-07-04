@@ -57,5 +57,5 @@ def get_postgres_sqlalchemy_uri():
         creds['production']['db']['password'],
         creds['production']['db']['host'],
         creds['production']['db']['port'],
-        'ef'
+        'ef_prod'
     )

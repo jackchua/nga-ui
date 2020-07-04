@@ -5,6 +5,7 @@ import os
 import sys
 
 get_config_mode = os.environ.get('NGA_UI_CONFIG_MODE', 'Debug')
+print(get_config_mode)
 
 try:
     config_mode = config_dict[get_config_mode.capitalize()]
@@ -15,4 +16,4 @@ app = create_app(config_mode)
 Migrate(app, db)
 
 if __name__ == "__main__":
-    app.run(debug = True)
+    app.run(debug=True)
