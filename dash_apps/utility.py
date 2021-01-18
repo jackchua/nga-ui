@@ -7,6 +7,7 @@ Created on Fri Jan 25 22:34:51 2019
 
 from datetime import datetime, timedelta
 from flask_login import current_user
+from flask_caching import Cache
 import dash_html_components as html
 import pandas as pd
 import uuid
@@ -59,3 +60,7 @@ def get_postgres_sqlalchemy_uri():
         creds['production']['db']['port'],
         'ef_prod'
     )
+
+def configure_cache():
+    cache = Cache(config={'CACHE_TYPE': 'filesystem','CACHE_DIR': 'cache-directory'})
+    return cache

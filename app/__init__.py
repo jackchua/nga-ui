@@ -1,15 +1,17 @@
 from flask import Flask, url_for
 from flask_login import current_user
-from .extensions import db, login_manager
+from .extensions import db, login_manager #cache
 from importlib import import_module
 from .base.models import User
 from dash_apps import google_ads_budget_optimizer, google_ads_ltv_optimizer, google_ads_causal_inference
+from dash_apps.gat_ltv_monitor import MonitoringDashboard
 from os import path
 import logging
 
 def register_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
+#     cache.init_app(app)
 
 
 def register_blueprints(app):
@@ -86,4 +88,5 @@ def create_app(config, selenium=False):
     app = google_ads_budget_optimizer.Add_Dash(app)
     app = google_ads_ltv_optimizer.Add_Dash(app)
     app = google_ads_causal_inference.Add_Dash(app)
+    app = MonitoringDashboard(app).run()
     return app
