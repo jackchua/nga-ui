@@ -14,26 +14,30 @@ import dash_table
 from sqlalchemy.sql import text
 from sqlalchemy import create_engine
 import pandas as pd
-import s3fs
 from catboost import CatBoostClassifier, CatBoostRegressor
 from explainerdashboard import ClassifierExplainer, RegressionExplainer
 import numpy as np
 import pickle
+import s3fs
 import shortuuid
 from explainerdashboard.custom import *
 from pandas import DataFrame
-
 from .utility import apply_layout_with_auth, load_object, save_object, get_postgres_sqlalchemy_uri, configure_cache
 
+fs = s3fs.S3FileSystem(anon=False)
 
 # # global vars
 _URL_BASE = '/dash/gat_ltv_monitor/'
 _ACCOUNT_VALUES = ('test')
 TIMEOUT = 1800
 cache = configure_cache()
-
 TRAINING_DATE = "20201214"
-TRAINING_DATA_LOC = 'data/20201214_dataset_v2.csv'  # to be replaced by reading from s3 directly
+
+# # Local
+# TRAINING_DATA_LOC = 'data/20201214_dataset_v2.csv'  # to be replaced by reading from s3 directly
+
+# Server
+TRAINING_DATA_LOC = 's3://ef-nga/dev/workflows/modeling/acquisition_ltv/gat/20201214_dataset_v2.csv'
 
 class MonitoringDashboard:
     def __init__(self, server, title="GAT LTV Acquisition Model", description=None, fluid=False):
@@ -405,9 +409,13 @@ class ClassificationModelComposite:
 
     @staticmethod
     def _load_classification_model():
-        MODEL_PATH = "model/20201214_classification_has_booked"
         classification_model = CatBoostClassifier()
-        classification_model.load_model(MODEL_PATH)
+        # # Local
+        # MODEL_PATH = "model/20201214_classification_has_booked"
+        # classification_model.load_model(MODEL_PATH)
+        # Server
+        MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_classification_has_booked"
+        classification_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
         return classification_model
 
     def _get_classification_explainer(self):
@@ -518,9 +526,13 @@ class RegressionModelComposite:
 
     @staticmethod
     def _load_regression_model():
-        MODEL_PATH = "model/20201214_regression_grandtotal"
         regression_model = CatBoostRegressor()
-        regression_model.load_model(MODEL_PATH)
+        # # Local
+        # MODEL_PATH = "model/20201214_regression_grandtotal"
+        # regression_model.load_model(MODEL_PATH)
+        # Server
+        MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_regression_grandtotal"
+        regression_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
         return regression_model
 
     def _get_regression_explainer(self):
