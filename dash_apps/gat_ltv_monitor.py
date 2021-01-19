@@ -568,7 +568,6 @@ class ScoringMetricsComponent:
         regress_key_words = ['mae', 'rmse']
         booking_key_words = ['mean_error', 'true_positive']
         self.class_metric_options_dict = self._produce_options_dict(class_key_words)
-        print(self.class_metric_options_dict)
         self.regress_metric_options_dict = self._produce_options_dict(regress_key_words)
         self.booking_metric_options_dict = self._produce_options_dict(booking_key_words)
         class_metrics_options = [[option for option in self.metric_options if key_word in option] for key_word in
@@ -578,12 +577,13 @@ class ScoringMetricsComponent:
         booking_metrics_options = [[option for option in self.metric_options if key_word in option] for key_word in
                                    booking_key_words]
         self.class_metrics_option_mapping = dict(zip(class_key_words, class_metrics_options))
-        print(self.class_metrics_option_mapping)
         self.regress_metrics_option_mapping = dict(zip(regress_key_words, regress_metrics_options))
         self.booking_metrics_option_mapping = dict(zip(booking_key_words, booking_metrics_options))
 
     def layout(self):
         return html.Div([
+            dcc.Interval(interval=24 * 3600 * 1000, id="interval"),
+            html.Div(id='hidden-div', style = {'display':'none'}),
             html.H2('LTV model metrics'),
             html.Div([
                 html.H3('Select metrics to inspect for the classification model in production'),
@@ -605,6 +605,17 @@ class ScoringMetricsComponent:
         ], style={'width': '500'})
 
     def component_callbacks(self, app):
+        # pull the latest table on DB on a schedule
+        @app.callback(
+            Output('hidden-div', 'children'),
+            [Input("interval", "n_intervals")]
+        )
+        def update_metrics_table(_):
+            # update the DB from client side (might get out of hand if the table grows too big
+            table = self._load_metrics_table()
+            self.metrics_table = self._reformat_metrics_data_for_plotting(table)
+            return None
+
         # the component has three graphs one for classification one for regression and one for live monitoring
         @app.callback(
             Output('gat-ltv-class-metrics-graph', 'figure'),
@@ -658,6 +669,7 @@ class ScoringMetricsComponent:
             data = rs.fetchall()
             keys = rs.keys()
             df = pd.DataFrame(data, columns=keys)
+
         return df
 
     @staticmethod
