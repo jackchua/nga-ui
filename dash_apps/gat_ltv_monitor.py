@@ -98,6 +98,7 @@ class MonitoringDashboard:
                       [Input('tabs', 'value')])
         def render_content(tab_value):
             matched_tab = [tab for tab in self.tabs if tab.name==tab_value]
+            print(matched_tab)
             assert len(matched_tab) == 1
             return matched_tab[0].layout()
 
