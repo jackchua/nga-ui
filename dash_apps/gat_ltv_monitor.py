@@ -31,238 +31,7 @@ _URL_BASE = '/dash/gat_ltv_monitor/'
 _ACCOUNT_VALUES = ('test')
 TIMEOUT = 1800
 cache = configure_cache()
-#
-# s3 = s3fs.S3FileSystem(anon=False)
-#
-# CLASS_MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_classification_has_booked"
-# REGRESS_MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_regression_grandtotal"
-# CALIB_MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_calibrator_model"
-# TRAINING_DATA_PATH = "s3://ef-nga/dev/workflows/modeling/acquisition_ltv/gat/20201214_dataset_v2.csv"
-#
-#
-# # layout
-# layout = html.Div([
-#     html.H2('LTV model metrics'),
-#     html.Div([
-#         html.H3('Pick model type:'),
-#         dcc.Dropdown(id='gat-ltv-metrics-model-type-dropdown',
-#                      options=[{'label':'classification', 'value':'has_booked'},
-#                               {'label':'regression', 'value':'grandtotal'}], value='has_booked'),
-#         html.H3('Type in model training date:'),
-#         dcc.Input(
-#             id="input-gat-training-date",
-#             type="text",
-#             placeholder="YYYYMMDD",
-#         )
-#     ]),
-#     html.Button('Submit', id='submit-val', n_clicks=0),
-#     dash_table.DataTable(
-#         id='gat-ltv-model-metrics-table',
-#         editable=False
-#     ),
-#     # dcc.Graph(id='gat-ltv-metrics-graph'),
-#     # html.H2('LTV sensitivities'),
-#     # dcc.Dropdown(id='sensitivities-date-dropdown'),
-#     # html.Br(),
-# ], style={'width': '500'})
 
-# # main initialization and callbacks
-# def Add_Dash(server):
-#     app = Dash(server=server, url_base_pathname=_URL_BASE)
-#     apply_layout_with_auth(app, layout)
-#
-#     # load the model
-#     @cache.memoize(timeout=TIMEOUT)
-#     def load_classificication_models():
-#         classification_model = CatBoostClassifier()
-#         classification_model.load_model(stream=s3.open(CLASS_MODEL_PATH, "rb"))
-#         # with this we need to set sklearn version to be 0.22.1
-#         calibrator = pickle.load(s3.open(CALIB_MODEL_PATH, "rb"))
-#         return classification_model, calibrator
-#
-#     @cache.memoize(timeout=TIMEOUT)
-#     def load_regression_model():
-#         regression_model = CatBoostRegressor()
-#         regression_model.load_model(stream=s3.open(REGRESS_MODEL_PATH, "rb"))
-#         return regression_model
-#
-#     @cache.memoize(timeout=TIMEOUT)
-#     def load_training_data():
-#         # latest schema for pandas to reading
-#         all_vars = [
-#             "ClientId",
-#             "first_touch_medium",
-#             "first_touch_source",
-#             "first_touch_campaign",
-#             "last_touch_medium",
-#             "last_touch_source",
-#             "last_touch_campaign",
-#             "last_session_date",
-#             "first_session_date",
-#             "last_month_seen",
-#             "last_week_seen",
-#             "last_year_seen",
-#             "TotalTimeonHomePage",
-#             "TotalTimeonTourPage",
-#             "NumVisitsonHomePage",
-#             "NumVisitsonTourPage",
-#             "TotalTimeonBrowsePage",
-#             "NumVisitsonBrowsePage",
-#             "TotalTimeonTravelDealsPage",
-#             "NumVisitsonTravelDealsPage",
-#             "TotalTimeOnOtherPage",
-#             "NumVisitsonOtherPages",
-#             "TotalTimeonAllPages",
-#             "AvgTimeonHomePage",
-#             "AvgTimeonBrowsePage",
-#             "AvgTimeonTourPage",
-#             "AvgTimeonTravelDealsPage",
-#             "AvgTimeonAllPages",
-#             "AvgTimeonOtherPages",
-#             "num_sessions",
-#             "TotalSessionDuration",
-#             "AvgSessionDuration",
-#             "bounce_rate",
-#             "num_sessions_last_week",
-#             "num_sessions_last_month",
-#             "num_sessions_last_two_months",
-#             "num_sessions_last_three_months",
-#             "num_mobile_sessions",
-#             "num_tablet_sessions",
-#             "num_desktop_sessions",
-#             "num_facebook_sessions",
-#             "num_cpc_sessions",
-#             "num_display_sessions",
-#             "num_organic_sessions",
-#             "num_referral_sessions",
-#             "num_social_sessions",
-#             "num_web_sessions",
-#             "num_print_sessions",
-#             "most_frequent_day_of_week",
-#             "most_frequent_time_of_day",
-#             "most_frequent_source",
-#             "avg_session_duration",
-#             "most_frequent_campaign",
-#             "most_frequent_medium",
-#             "num_sessions_first_week",
-#             "num_sessions_first_month",
-#             "SalesforceId",
-#             "daydif",
-#             "num_bookings",
-#             "GrandTotal",
-#             "GoogleClickId",
-#             "NumBrandCampaigns",
-#             "hostname",
-#         ]
-#         schema = {}
-#         for var in all_vars:
-#             # default strings
-#             schema[var] = str
-#         data = pd.read_csv(TRAINING_DATA_PATH, error_bad_lines=False, sep=",", dtype=schema)
-#         # float points
-#         num_vars = [
-#             "last_month_seen",
-#             "last_week_seen",
-#             "TotalTimeonHomePage",
-#             "TotalTimeonTourPage",
-#             "NumVisitsonHomePage",
-#             "NumVisitsonTourPage",
-#             "TotalTimeonBrowsePage",
-#             "NumVisitsonBrowsePage",
-#             "TotalTimeonTravelDealsPage",
-#             "NumVisitsonTravelDealsPage",
-#             "TotalTimeOnOtherPage",
-#             "NumVisitsonOtherPages",
-#             "TotalTimeonAllPages",
-#             "AvgTimeonHomePage",
-#             "AvgTimeonBrowsePage",
-#             "AvgTimeonTourPage",
-#             "AvgTimeonTravelDealsPage",
-#             "AvgTimeonAllPages",
-#             "AvgTimeonOtherPages",
-#             "num_sessions",
-#             "TotalSessionDuration",
-#             "AvgSessionDuration",
-#             "bounce_rate",
-#             "num_sessions_last_week",
-#             "num_sessions_last_month",
-#             "num_sessions_last_two_months",
-#             "num_sessions_last_three_months",
-#             "num_sessions_first_week",
-#             "num_sessions_first_month",
-#             "num_mobile_sessions",
-#             "num_tablet_sessions",
-#             "num_desktop_sessions",
-#             "num_facebook_sessions",
-#             "num_cpc_sessions",
-#             "num_display_sessions",
-#             "num_organic_sessions",
-#             "num_referral_sessions",
-#             "num_social_sessions",
-#             "num_web_sessions",
-#             "num_print_sessions",
-#             "most_frequent_day_of_week",
-#             "daydif",
-#             "num_bookings",
-#             "GrandTotal",
-#             "NumBrandCampaigns",
-#         ]
-#         num_var_schema = {}
-#         for var in num_vars:
-#             num_var_schema[var] = float
-#         data = data.astype(num_var_schema)
-#         # exclude people who have 0 session time which is likely a GA bug
-#         data = data.loc[data.TotalSessionDuration > 0, :]
-#         print(data.dtypes)
-#         # preprocess the GoogleClickId
-#         data["GoogleClickId"] = data["GoogleClickId"].apply(lambda x: np.nan if x == "[]" else x)
-#         data["SalesforceId"] = data["SalesforceId"].apply(lambda x: np.nan if x == "[]" else x)
-#         return data
-#
-#     @app.callback(
-#         [Output('gat-ltv-model-metrics-table', 'data'), Output('gat-ltv-model-metrics-table', 'columns')],
-#         [Input('submit-val', 'n_clicks')],
-#         state = [State('gat-ltv-metrics-model-type-dropdown', 'value'), State('input-gat-training-date', 'value')])
-#     def get_ltv_training_metrics_table(n_clicks, model_type,model_training_date):
-#         if n_clicks > 0:
-#             data_loc = f"s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/{model_training_date}_model_diagnostics/{model_type}/metrics.csv"
-#             print(data_loc)
-#             df = pd.read_csv(data_loc)
-#             columns = [{"name": i, "id": i} for i in df.columns]
-#             return df.to_dict(orient='records'), columns
-#         else:
-#             return [], []
-#
-#     # @app.callback(
-#     #     Output('ltv-metrics-graph', 'figure'),
-#     #     [Input('account-dropdown', 'value'), Input('ltv-metrics-model-type-dropdown', 'value')]
-#     # )
-#     # def get_ltv_metrics_graph(account_value, model_type):
-#     #     statement = text("""
-#     #     select * from {}.ltv_model_metrics where model_type='{}' order by model_type, model_date
-#     #     """.format(account_value, model_type))
-#     #     with pgdb.connect() as con:
-#     #         rs = con.execute(statement)
-#     #         data = rs.fetchall()
-#     #         keys = rs.keys()
-#     #         df = pd.DataFrame(data, columns=keys)
-#     #
-#     #     df = pd.melt(
-#     #         df, id_vars=['model_date','model_type'],
-#     #         value_vars=['precision','recall','accuracy', 'auc']
-#     #     )
-#     #     df = df.rename(columns={'variable':'metric'})
-#     #     fig = px.scatter(
-#     #         df,
-#     #         x='model_date',
-#     #         y='value',
-#     #         color='metric',
-#     #     )
-#     #     for d in fig.data:
-#     #         d.update(mode='markers+lines')
-#     #     return fig
-#
-#     return app.server
 TRAINING_DATE = "20201214"
 TRAINING_DATA_LOC = 'data/20201214_dataset_v2.csv'  # to be replaced by reading from s3 directly
 
@@ -273,7 +42,9 @@ class MonitoringDashboard:
         # figure out how to add cache later
         global cache
         cache.init_app(server)
-        # data_loader = DataLoader(TRAINING_DATA_LOC, TRAINING_DATE)
+        data_loader = DataLoader(TRAINING_DATA_LOC, TRAINING_DATE)
+        self.tabs = [ClassificationModelComposite(data_loader), RegressionModelComposite(data_loader),
+                PostTrainingMonitoringComposite()]
         self.description = description
         self.title = title
         self.fluid = fluid
@@ -299,7 +70,7 @@ class MonitoringDashboard:
     def _get_regression_explainer(self):
         pass
 
-    def layout(self, tabs):
+    def layout(self):
         """The layout of the app with different tabs"""
         return html.Div([
             dbc.Container([
@@ -308,19 +79,30 @@ class MonitoringDashboard:
                         html.H1(self.title, id='dashboard-title'),
                         dbc.Tooltip(self.description, target='dashboard-title')
                     ], width="auto")], justify="start", style=dict(marginBottom=10)),
-            dcc.Tabs(id="tabs", value=tabs[0].name,
-                     children=[dcc.Tab(label=tab.title, id=tab.name, value=tab.name,
-                                       children=tab.layout()) for tab in tabs])
+            dcc.Tabs(id="tabs", value=self.tabs[0].name,
+                     children=[dcc.Tab(label=tab.title, id=tab.name, value=tab.name) for tab in self.tabs]),
+            html.Div(
+                children=[
+                    dcc.Loading(id='tabs-content')
+                ],
+            )
             ], fluid=self.fluid)
         ], style={'width': '500'})
 
+    def register_callbacks(self, app):
+        @app.callback(Output('tabs-content', 'children'),
+                      [Input('tabs', 'value')])
+        def render_content(tab_value):
+            matched_tab = [tab for tab in self.tabs if tab.name==tab_value]
+            assert len(matched_tab) == 1
+            return matched_tab[0].layout()
+
     def run(self):
         """Return app.server to be served in via waitress or gunicorn"""
-        data_loader = DataLoader(TRAINING_DATA_LOC, TRAINING_DATE)
-        tabs = [ClassificationModelComposite(data_loader), RegressionModelComposite(data_loader), PostTrainingMonitoringComposite()]
-        for tab in tabs:
+        for tab in self.tabs:
             tab.register_callbacks(self.app)
-        apply_layout_with_auth(self.app, self.layout(tabs))
+        self.register_callbacks(self.app)
+        apply_layout_with_auth(self.app, self.layout())
         return self.app.server
 
 
