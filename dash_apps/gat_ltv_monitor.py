@@ -2,6 +2,7 @@
 """
 Created on Sun Jul  8 10:39:33 2018
 """
+import os
 import plotly.express as px
 import json
 from datetime import datetime
@@ -32,12 +33,17 @@ _ACCOUNT_VALUES = ('test')
 TIMEOUT = 1800
 cache = configure_cache()
 TRAINING_DATE = "20201214"
+if os.environ['USER'] == 'ubuntu':
+    LOCAL = False
+else:
+    LOCAL = True
 
-# Local
-TRAINING_DATA_LOC = 'data/20201214_dataset_v2.csv'  # to be replaced by reading from s3 directly
-
-# Server
-# TRAINING_DATA_LOC = 's3://ef-nga/dev/workflows/modeling/acquisition_ltv/gat/20201214_dataset_v2.csv'
+if LOCAL:
+    # Local
+    TRAINING_DATA_LOC = 'data/20201214_dataset_v2.csv'  # to be replaced by reading from s3 directly
+else:
+    # Server
+    TRAINING_DATA_LOC = 's3://ef-nga/dev/workflows/modeling/acquisition_ltv/gat/20201214_dataset_v2.csv'
 
 class MonitoringDashboard:
     def __init__(self, server, title="GAT LTV Acquisition Model", description=None, fluid=False):
@@ -430,12 +436,14 @@ class ClassificationModelComposite:
     @staticmethod
     def _load_classification_model():
         classification_model = CatBoostClassifier()
-        # # Local
-        MODEL_PATH = "model/20201214_classification_has_booked"
-        classification_model.load_model(MODEL_PATH)
-        # Server
-        # MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_classification_has_booked"
-        # classification_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
+        if LOCAL:
+            # Local
+            MODEL_PATH = "model/20201214_classification_has_booked"
+            classification_model.load_model(MODEL_PATH)
+        else:
+            # Server
+            MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_classification_has_booked"
+            classification_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
         return classification_model
 
     def _get_classification_explainer(self):
@@ -570,12 +578,14 @@ class RegressionModelComposite:
     @staticmethod
     def _load_regression_model():
         regression_model = CatBoostRegressor()
-        # # Local
-        MODEL_PATH = "model/20201214_regression_grandtotal"
-        regression_model.load_model(MODEL_PATH)
-        # Server
-        # MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_regression_grandtotal"
-        # regression_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
+        if LOCAL:
+            # Local
+            MODEL_PATH = "model/20201214_regression_grandtotal"
+            regression_model.load_model(MODEL_PATH)
+        else:
+            # Server
+            MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_regression_grandtotal"
+            regression_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
         return regression_model
 
     def _get_regression_explainer(self):
