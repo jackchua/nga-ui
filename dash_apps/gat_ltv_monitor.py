@@ -33,20 +33,19 @@ TIMEOUT = 1800
 cache = configure_cache()
 TRAINING_DATE = "20201214"
 
-# # Local
-# TRAINING_DATA_LOC = 'data/20201214_dataset_v2.csv'  # to be replaced by reading from s3 directly
+# Local
+TRAINING_DATA_LOC = 'data/20201214_dataset_v2.csv'  # to be replaced by reading from s3 directly
 
 # Server
-TRAINING_DATA_LOC = 's3://ef-nga/dev/workflows/modeling/acquisition_ltv/gat/20201214_dataset_v2.csv'
+# TRAINING_DATA_LOC = 's3://ef-nga/dev/workflows/modeling/acquisition_ltv/gat/20201214_dataset_v2.csv'
 
 class MonitoringDashboard:
     def __init__(self, server, title="GAT LTV Acquisition Model", description=None, fluid=False):
         """Initialise the dashboard with passed in params"""
         self.app = Dash(server=server, url_base_pathname=_URL_BASE)
         # figure out how to add cache later
-        global cache
         cache.init_app(server)
-        data_loader = DataLoader(TRAINING_DATA_LOC, TRAINING_DATE)
+        data_loader = self.create_data_loader()
         self.tabs = [ClassificationModelComposite(data_loader), RegressionModelComposite(data_loader),
                 PostTrainingMonitoringComposite()]
         self.description = description
@@ -97,17 +96,32 @@ class MonitoringDashboard:
         @app.callback(Output('tabs-content', 'children'),
                       [Input('tabs', 'value')])
         def render_content(tab_value):
+            print(tab_value)
             matched_tab = [tab for tab in self.tabs if tab.name==tab_value]
             print(matched_tab)
             assert len(matched_tab) == 1
             return matched_tab[0].layout()
 
+    def calculate_dependencies(self):
+        """Calculates dependencies for all tabs"""
+        for tab in self.tabs:
+            try:
+                tab.calculate_dependencies()
+            except AttributeError:
+                print(f"Warning: {tab} does not have a calculate_dependencies method!")
+
+    @cache.memoize(timeout=TIMEOUT)
+    def create_data_loader(self):
+        data_loader = DataLoader(TRAINING_DATA_LOC, TRAINING_DATE)
+        return data_loader
+
     def run(self):
         """Return app.server to be served in via waitress or gunicorn"""
+        apply_layout_with_auth(self.app, self.layout())
+        self.calculate_dependencies()
         for tab in self.tabs:
             tab.register_callbacks(self.app)
         self.register_callbacks(self.app)
-        apply_layout_with_auth(self.app, self.layout())
         return self.app.server
 
 
@@ -115,8 +129,13 @@ class DataLoader:
     def __init__(self, training_data_loc, training_data_date):
         self.training_data_loc = training_data_loc
         self.training_data_date = training_data_date
+        X_trainval_booked, X_test_booked, y_trainval_booked, y_test_booked, y_grandtotal = self.prepare_training_data_for_classification()
+        X_trainval_grandtotal, y_trainval_grandtotal, X_test_grandtotal, y_test_grandtotal = self.prepare_training_data_for_regression(X_trainval_booked, X_test_booked, y_trainval_booked, y_test_booked, y_grandtotal)
+        self.x_test_booked = X_test_booked
+        self.y_test_booked = y_test_booked
+        self.x_test_grandtotal = X_test_grandtotal
+        self.y_test_grandtotal = y_test_grandtotal
 
-    @cache.memoize(timeout=TIMEOUT)
     def prepare_training_data_for_classification(self):
         from datetime import datetime
         from dateutil.relativedelta import relativedelta
@@ -366,7 +385,7 @@ def update_params(kwargs, **params):
 
 
 class ClassificationModelComposite:
-    def __init__(self, data_loader: DataLoader, title="Classfication Model Performance Summary", name=None, hide_selector=True, pos_label=None, cats=True, depth=None, **kwargs):
+    def __init__(self, data_loader: DataLoader, title="Classfication Model Performance Summary", name="classification-tab", hide_selector=True, pos_label=None, cats=True, depth=None, **kwargs):
         self.data_loader = data_loader
         if not hasattr(self, "name") or self.name is None:
             self.name = name or "uuid" + shortuuid.ShortUUID().random(length=5)
@@ -412,17 +431,16 @@ class ClassificationModelComposite:
     def _load_classification_model():
         classification_model = CatBoostClassifier()
         # # Local
-        # MODEL_PATH = "model/20201214_classification_has_booked"
-        # classification_model.load_model(MODEL_PATH)
+        MODEL_PATH = "model/20201214_classification_has_booked"
+        classification_model.load_model(MODEL_PATH)
         # Server
-        MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_classification_has_booked"
-        classification_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
+        # MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_classification_has_booked"
+        # classification_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
         return classification_model
 
     def _get_classification_explainer(self):
         classification_model = self._load_classification_model()
-        _, x_test_booked, _, y_test_booked, _ = self.data_loader.prepare_training_data_for_classification()
-        explainer = ClassifierExplainer(classification_model, x_test_booked, y_test_booked,
+        explainer = ClassifierExplainer(classification_model, self.data_loader.x_test_booked, self.data_loader.y_test_booked,
                                         labels=['Not booked', 'booked'],  # defaults to ['0', '1', etc]
                                         index_name="Browser row number",  # defaults to X.index.name
                                         )
@@ -475,9 +493,33 @@ class ClassificationModelComposite:
         for comp in self._components:
             comp.component_callbacks(app)
 
+    @property
+    def dependencies(self):
+        """returns a list of unique dependencies of the component
+        and all subcomponents"""
+        if not hasattr(self, '_dependencies'):
+            self._dependencies = []
+        self.register_components()
+        deps = self._dependencies
+        for comp in self._components:
+            deps.extend(comp.dependencies)
+        deps = list(set(deps))
+        return deps
+
+    def calculate_dependencies(self):
+        """calls all properties in self.dependencies so that they get calculated
+        up front. This is useful to do before starting a dashboard, so you don't
+        compute properties multiple times in parallel."""
+        for dep in self.dependencies:
+            try:
+                _ = getattr(self.explainer, dep)
+            except:
+                ValueError(f"Failed to generate dependency '{dep}': "
+                           "Failed to calculate or retrieve explainer property explainer.{dep}...")
+
 
 class RegressionModelComposite:
-    def __init__(self, data_loader: DataLoader, title="Regression Model Performance Summary", name=None, pred_or_actual="vs_pred", residuals='difference', logs=False, cats=True, hide_selector=True, depth=None, **kwargs):
+    def __init__(self, data_loader: DataLoader, title="Regression Model Performance Summary", name="regression-tab", pred_or_actual="vs_pred", residuals='difference', logs=False, cats=True, hide_selector=True, depth=None, **kwargs):
         self.data_loader = data_loader
         if not hasattr(self, "name") or self.name is None:
             self.name = name or "uuid" + shortuuid.ShortUUID().random(length=5)
@@ -529,18 +571,16 @@ class RegressionModelComposite:
     def _load_regression_model():
         regression_model = CatBoostRegressor()
         # # Local
-        # MODEL_PATH = "model/20201214_regression_grandtotal"
-        # regression_model.load_model(MODEL_PATH)
+        MODEL_PATH = "model/20201214_regression_grandtotal"
+        regression_model.load_model(MODEL_PATH)
         # Server
-        MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_regression_grandtotal"
-        regression_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
+        # MODEL_PATH = "s3://ef-nga/prod/workflows/modeling/acquisition_ltv/gat/ltv-experiment/20201214_regression_grandtotal"
+        # regression_model.load_model(stream=fs.open(MODEL_PATH, 'rb'))
         return regression_model
 
     def _get_regression_explainer(self):
         regression_model = self._load_regression_model()
-        X_trainval_booked, X_test_booked, y_trainval_booked, y_test_booked, y_grandtotal = self.data_loader.prepare_training_data_for_classification()
-        _, _, X_test_grandtotal, y_test_grandtotal = self.data_loader.prepare_training_data_for_regression(X_trainval_booked, X_test_booked, y_trainval_booked, y_test_booked, y_grandtotal)
-        explainer = RegressionExplainer(regression_model, X_test_grandtotal, y_test_grandtotal)
+        explainer = RegressionExplainer(regression_model, self.data_loader.x_test_grandtotal, self.data_loader.y_test_grandtotal)
         return explainer
 
     def register_components(self):
@@ -557,6 +597,30 @@ class RegressionModelComposite:
         self.register_components()
         for comp in self._components:
             comp.component_callbacks(app)
+
+    @property
+    def dependencies(self):
+        """returns a list of unique dependencies of the component
+        and all subcomponents"""
+        if not hasattr(self, '_dependencies'):
+            self._dependencies = []
+        self.register_components()
+        deps = self._dependencies
+        for comp in self._components:
+            deps.extend(comp.dependencies)
+        deps = list(set(deps))
+        return deps
+
+    def calculate_dependencies(self):
+        """calls all properties in self.dependencies so that they get calculated
+        up front. This is useful to do before starting a dashboard, so you don't
+        compute properties multiple times in parallel."""
+        for dep in self.dependencies:
+            try:
+                _ = getattr(self.explainer, dep)
+            except:
+                ValueError(f"Failed to generate dependency '{dep}': "
+                           "Failed to calculate or retrieve explainer property explainer.{dep}...")
 
 
 class ScoringMetricsComponent:
@@ -710,7 +774,7 @@ class ScoringMetricsComponent:
 
 
 class PostTrainingMonitoringComposite:
-    def __init__(self, title='Production metrics', name=None):
+    def __init__(self, title='Production metrics', name="production-tab"):
         self.scoring_metrics = ScoringMetricsComponent()
         if not hasattr(self, "name") or self.name is None:
             self.name = name or "uuid" + shortuuid.ShortUUID().random(length=5)
